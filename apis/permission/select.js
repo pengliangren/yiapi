@@ -1,0 +1,53 @@
+import { fn_getFileInfos, fn_getOffset } from '../../utils/index.js';
+import constant from '../../config/constant.js';
+import schema from '../../config/schema.js';
+import permissionTable from '../../tables/permission.js';
+
+const fileInfos = fn_getFileInfos(import.meta.url);
+export default async function (fastify, opts) {
+    fastify.route({
+        method: 'GET',
+        url: `/${fileInfos.pureFileName}`,
+        schema: {
+            query: {
+                type: 'object',
+                properties: {
+                    page: schema.page,
+                    limit: schema.limit
+                }
+            }
+        },
+        config: {},
+        handler: async function (req, res) {
+            try {
+                let permissionModel = fastify.mysql //
+                    .table('permission')
+                    .modify(function (queryBuilder) {
+                        if (req.query.recommend_state !== undefined) {
+                            queryBuilder.where('recommend_state', req.query.recommend_state);
+                        }
+                    });
+
+                let resultCount = await permissionModel.clone().count('id', { as: 'count' }).first();
+                let resultRows = await permissionModel
+                    .clone()
+                    //
+                    .offset(fn_getOffset(req.query.page, req.query.limit))
+                    .limit(req.query.limit)
+                    .select();
+                return {
+                    ...constant.code.SUCCESS_SELECT,
+                    data: {
+                        count: resultCount.count,
+                        rows: resultRows,
+                        page: req.query.page,
+                        limit: req.query.limit
+                    }
+                };
+            } catch (err) {
+                fastify.log.error(err);
+                return constant.code.FAIL_SELECT;
+            }
+        }
+    });
+}
