@@ -7,7 +7,7 @@ export default {
     // 根目录
     rootDir: resolve(fn_dirname(import.meta.url), '..'),
     // 监听端口
-    port: 3000,
+    port: 3010,
     // 监听主机
     host: '127.0.0.1',
     // 插件配置

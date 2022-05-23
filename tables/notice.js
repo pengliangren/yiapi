@@ -42,7 +42,7 @@ export default {
         defaultValue: 0,
         comment: '推荐状态',
         schema: {
-            type: 'string',
+            type: 'number',
             enum: [0, 1],
             title: '推荐状态'
         }

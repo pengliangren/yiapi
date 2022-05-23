@@ -1,4 +1,4 @@
-import { fn_getFileInfos } from '../../utils/index.js';
+import { fn_getFileInfos, fn_existsRole } from '../../utils/index.js';
 import constant from '../../config/constant.js';
 import schema from '../../config/schema.js';
 
