@@ -1,78 +1,94 @@
 import fp from 'fastify-plugin';
-import { keyBy as _keyBy, omitBy as _omitBy, forEach as _forEach, isEmpty as _isEmpty } from 'lodash-es';
-import { fn_getDatetime, fn_clearEmptyData, fn_MD5 } from '../utils/index.js';
-import menuConfig from '../config/menu.js';
+import * as _ from 'lodash-es';
+import * as utils from '../utils/index.js';
+import { menuConfig } from '../config/menu.js';
 
-async function main(fastify, opts) {
-    // 同步接口
-    try {
-        // 准备好表
-        let permissionModel = fastify.mysql.table('permission');
+// 同步菜单目录
+async function syncMenuDir(fastify) {
+    // 准备好表
+    let treeModel = fastify.mysql.table('tree');
 
-        // 第一次请求菜单数据，用于创建一级菜单
-        let menuData1 = await permissionModel.clone().where('tag', 'menu').select();
-        let menuNames1 = menuData1.map((item) => item.name);
+    // 第一次请求菜单数据，用于创建一级菜单
+    let menuData = await treeModel.clone().where('type', 'menu').select();
+    let menuName = menuData.map((item) => item.name);
 
-        // 将要添加的接口数据
-        let insertMainMenuData = [];
-        _forEach(menuConfig.mainMenu, (item) => {
-            if (menuNames1.includes(item.name) === false) {
-                insertMainMenuData.push({
-                    name: item.name,
-                    tag: 'menu',
-                    value: item.value,
-                    level: 1,
-                    pids: '0',
-                    pid: 0,
-                    sort: 0,
-                    is_open: 0,
-                    describe: '',
-                    created_at: fn_getDatetime(),
-                    updated_at: fn_getDatetime()
-                });
-            }
-        });
-
-        if (_isEmpty(insertMainMenuData) === false) {
-            await permissionModel.clone().insert(insertMainMenuData);
+    // 将要添加的接口数据
+    let insertMenuDir = [];
+    _.forEach(menuConfig, (item, index) => {
+        if (menuName.includes(item.name) === false) {
+            insertMenuDir.push({
+                type: 'menu',
+                name: item.name,
+                value: item.value,
+                level: 1,
+                pids: '0',
+                pid: 0,
+                sort: index,
+                is_open: 0,
+                describe: item.describe || '',
+                created_at: utils.getDatetime(),
+                updated_at: utils.getDatetime()
+            });
         }
+    });
 
-        // 第二次请求菜单数据，用于创建二级菜单
-        let menuData2 = await permissionModel.clone().where('tag', 'menu').select();
-        let menuNames2 = menuData2.map((item) => item.name);
-        let menuDataByName = _keyBy(menuData2, 'name');
+    if (_.isEmpty(insertMenuDir) === false) {
+        await treeModel.clone().insert(insertMenuDir);
+    }
+}
 
-        // 待添加的子菜单（二级菜单）
-        let insertSubMenuData = [];
-        _forEach(menuConfig.subMenu, (item) => {
-            if (menuNames2.includes(item.name) === false) {
-                let parentMenuData = menuDataByName[item.parent] || null;
+// 同步菜单文件
+async function syncMenuFile(fastify) {
+    // 准备好表
+    let treeModel = fastify.mysql.table('tree');
+
+    // 第二次请求菜单数据，用于创建二级菜单
+    let menuData = await treeModel.clone().where('type', 'menu').select();
+
+    // 菜单名数组
+    let menuValueArray = menuData.map((item) => item.value);
+
+    // 菜单名对象
+    let menuValueObject = _.keyBy(menuData, 'value');
+
+    // 待添加的子菜单（二级菜单）
+    let insertMenuFile = [];
+
+    _.forEach(menuConfig, (mainItem) => {
+        _.forEach(mainItem.children, (item, index) => {
+            if (menuValueArray.includes(item.value) === false) {
+                let parentMenuData = menuValueObject[mainItem.value] || null;
                 if (parentMenuData) {
-                    insertSubMenuData.push({
+                    insertMenuFile.push({
+                        type: 'menu',
                         name: item.name,
-                        tag: 'menu',
                         value: item.value,
                         level: 2,
                         pids: `0,${parentMenuData.id}`,
                         pid: parentMenuData.id,
-                        sort: 0,
+                        sort: index,
                         is_open: 0,
-                        describe: '',
-                        created_at: fn_getDatetime(),
-                        updated_at: fn_getDatetime()
+                        describe: item.describe || '',
+                        created_at: utils.getDatetime(),
+                        updated_at: utils.getDatetime()
                     });
                 }
             }
         });
+    });
 
-        if (_isEmpty(insertSubMenuData) === false) {
-            await permissionModel.clone().insert(insertSubMenuData);
-        }
+    if (_.isEmpty(insertMenuFile) === false) {
+        await treeModel.clone().insert(insertMenuFile);
+    }
+}
 
-        console.log('菜单自动同步成功');
+async function main(fastify) {
+    // 同步接口
+    try {
+        await syncMenuDir(fastify);
+        await syncMenuFile(fastify);
     } catch (err) {
         fastify.log.error(err);
-        console.log('菜单自动同步失败');
     }
 }
 export default fp(main, { name: 'syncMenu', dependencies: ['mysql', 'sequelize', 'redis', 'tool'] });

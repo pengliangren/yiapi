@@ -1,5 +1,7 @@
-export default {
-    secret: 'front-end-world',
-    expiresIn: '7d',
+import { appConfig } from './app.js';
+const jwtConfig = {
+    secret: appConfig.salt,
+    expiresIn: appConfig.expires,
     algorithm: 'HS256'
 };
+export { jwtConfig };

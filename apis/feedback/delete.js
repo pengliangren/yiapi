@@ -1,35 +1,43 @@
-import { fn_getFileInfos } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
-import feedbackTable from '../../tables/feedback.js';
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/feedback.js';
 
-const fileInfos = fn_getFileInfos(import.meta.url);
+const apiInfo = utils.getApiInfo(import.meta.url);
 
 export default async function (fastify, opts) {
     fastify.route({
         method: 'POST',
-        url: `/${fileInfos.pureFileName}`,
+        url: `/${apiInfo.pureFileName}`,
         schema: {
+            summary: `删除意见反馈`,
+            tags: [apiInfo.parentDirname],
+            description: `${apiInfo.apiPath}`,
             body: {
                 type: 'object',
                 properties: {
-                    id: feedbackTable.id.schema
+                    id: tableData.id.schema
                 },
                 required: ['id']
             }
         },
-        config: {},
-        handler: async function (req, res) {
-            let model = fastify.mysql //
-                .table('feedback')
-                .where({ id: req.body.id })
-                .modify(function (queryBuilder) {});
 
-            let result = await model.delete();
-            if (!result) {
-                return constant.code.FAIL_INSERT;
+        handler: async function (req, res) {
+            try {
+                let model = fastify.mysql //
+                    .table(tableName)
+                    .where({ id: req.body.id })
+                    .modify(function (queryBuilder) {});
+
+                let result = await model.delete();
+                return {
+                    ...constantConfig.code.SUCCESS_INSERT,
+                    data: result
+                };
+            } catch (err) {
+                fastify.logError(err);
+                return constantConfig.code.FAIL_INSERT;
             }
-            return constant.code.SUCCESS_INSERT;
         }
     });
 }

@@ -1,60 +1,111 @@
 import { DataTypes } from 'sequelize';
+import * as utils from '../utils/index.js';
 
-export default {
+const data = {
     id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true,
-        comment: '自增',
+        meta: {
+            comment: '自增'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
+        },
         schema: {
             type: 'integer',
-            minimum: 1,
-            title: '自增'
+            minimum: 1
         }
     },
-    type: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        comment: '字典类型',
+    pid: {
+        meta: {
+            comment: '字典分类'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
         schema: {
-            type: 'string',
-            minLength: 1,
-            maxLength: 100,
-            title: '字典类型'
+            type: 'integer',
+            minimum: 0
         }
     },
     name: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        comment: '字典名称',
+        meta: {
+            comment: '字典名称'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false
+        },
         schema: {
             type: 'string',
             minLength: 1,
-            maxLength: 100,
-            title: '字典名称'
+            maxLength: 200
         }
     },
     value: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        comment: '字典值',
+        meta: {
+            comment: '字典值'
+        },
+        table: {
+            type: DataTypes.STRING(500),
+            allowNull: false
+        },
         schema: {
             type: 'string',
-            minLength: 1,
-            maxLength: 100,
-            title: '字典值'
+            minLength: 0,
+            maxLength: 500
+        }
+    },
+    type: {
+        meta: {
+            comment: '字典类型'
+        },
+        table: {
+            type: DataTypes.STRING(10),
+            allowNull: false,
+            defaultValue: 'string'
+        },
+        schema: {
+            type: 'string',
+            enum: ['number', 'string']
+        }
+    },
+    describe: {
+        meta: {
+            comment: '分类描述'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false,
+            defaultValue: ''
+        },
+        schema: {
+            type: 'string',
+            minLength: 0,
+            maxLength: 200
         }
     },
     state: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '状态',
+        meta: {
+            comment: '状态'
+        },
+        table: {
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0
+        },
         schema: {
             type: 'integer',
-            enum: [0, 1, 2],
-            title: '状态'
+            enum: [0, 1, 2]
         }
     }
 };
+
+const option = {
+    comment: '字典'
+};
+
+export const { tableDescribe, tableName, tableData } = utils.getTableData(import.meta.url, data, option);

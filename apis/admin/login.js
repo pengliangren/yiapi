@@ -1,49 +1,54 @@
-import { merge as _merge } from 'lodash-es';
-import { fn_getFileInfos, fn_MD5 } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
-import adminTable from '../../tables/admin.js';
+import * as _ from 'lodash-es';
 
-const fileInfos = fn_getFileInfos(import.meta.url);
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/admin.js';
+
+const apiInfo = utils.getApiInfo(import.meta.url);
+
 export default async function (fastify, opts) {
     fastify.route({
         method: 'POST',
-        url: `/${fileInfos.pureFileName}`,
+        url: `/${apiInfo.pureFileName}`,
         schema: {
+            tags: [apiInfo.parentDirname],
+            summary: `管理员登录`,
+            description: `${apiInfo.apiPath}`,
             body: {
                 type: 'object',
                 properties: {
-                    account: adminTable.account.schema,
-                    password: adminTable.password.schema
+                    account: tableData.account.schema,
+                    password: tableData.password.schema
                 },
                 required: ['account', 'password']
             }
         },
-        config: {},
+
         handler: async function (req, res) {
             try {
-                let adminModel = fastify.mysql
-                    .table('admin')
+                let model = fastify.mysql
+                    .table(tableName)
                     //
                     .orWhere({ account: req.body.account })
                     .orWhere({ phone: req.body.account })
                     .orWhere({ weixin: req.body.account })
                     .orWhere({ qq: req.body.account });
 
-                console.log(adminModel.toString());
+                console.log(model.toString());
                 // 查询用户是否存在
-                let result = await adminModel.clone().first();
+                let result = await model.clone().first();
                 // 判断用户存在
                 if (result === undefined) {
-                    return _merge(constant.code.FAIL, { msg: '用户不存在' });
+                    return _.merge(constantConfig.code.FAIL, { msg: '用户不存在' });
                 }
 
                 // 判断密码
-                if (fn_MD5(req.body.password) !== result.password) {
-                    return _merge(constant.code.FAIL, { msg: '密码错误' });
+                if (utils.MD5(req.body.password) !== result.password) {
+                    return _.merge(constantConfig.code.FAIL, { msg: '密码错误' });
                 }
 
-                let dataRoleCodes = await fastify.redisGet('dataRole', 'json');
+                let dataRoleCodes = await fastify.redisGet('cacheData:role', 'json');
                 let roleCodesArray = result.role_codes.split(',');
                 let role_codes = [];
                 dataRoleCodes.forEach((item) => {
@@ -53,7 +58,7 @@ export default async function (fastify, opts) {
                 });
 
                 // 成功返回
-                return _merge(constant.code.SUCCESS, {
+                return _.merge(constantConfig.code.SUCCESS, {
                     msg: '登录成功',
                     data: result,
                     token: await fastify.jwt.sign({
@@ -65,8 +70,8 @@ export default async function (fastify, opts) {
                     })
                 });
             } catch (err) {
-                fastify.log.error(err);
-                return _merge(constant.code.FAIL, { msg: '登录失败' });
+                fastify.logError(err);
+                return _.merge(constantConfig.code.FAIL, { msg: '登录失败' });
             }
         }
     });

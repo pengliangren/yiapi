@@ -1,41 +1,52 @@
-import { fn_getFileInfos, fn_getOffset } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
-import feedbackTable from '../../tables/feedback.js';
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/feedback.js';
 
-const fileInfos = fn_getFileInfos(import.meta.url);
+const apiInfo = utils.getApiInfo(import.meta.url);
 export default async function (fastify, opts) {
     fastify.route({
-        method: 'GET',
-        url: `/${fileInfos.pureFileName}`,
+        method: 'POST',
+        url: `/${apiInfo.pureFileName}`,
         schema: {
-            query: {
+            summary: `更新意见反馈`,
+            tags: [apiInfo.parentDirname],
+            description: `${apiInfo.apiPath}`,
+            body: {
                 type: 'object',
                 properties: {
-                    page: schema.page,
-                    limit: schema.limit,
-                    keywords: schema.keywords
+                    page: schemaConfig.page,
+                    limit: schemaConfig.limit,
+                    keywords: schemaConfig.keywords
                 }
             }
         },
-        config: {},
         handler: async function (req, res) {
-            let model = fastify.mysql //
-                .table('feedback')
-                .leftJoin('user', 'feedback.user_id', 'user.id')
-                .modify(function (queryBuilder) {});
+            try {
+                let model = fastify.mysql //
+                    .table(tableName)
+                    .leftJoin('user', 'feedback.user_id', 'user.id')
+                    .modify(function (queryBuilder) {});
 
-            let resultCount = await model.clone().count('*', { as: 'count' }).first();
-            let resultRows = await model.clone().offset(fn_getOffset(req.query.page, req.query.limit)).limit(req.query.limit).select('feedback.*', 'user.nickname', 'user.username', 'user.phone');
-            return {
-                ...constant.code.SUCCESS_SELECT,
-                data: {
-                    count: resultCount.count,
-                    rows: resultRows,
-                    page: req.query.page,
-                    limit: req.query.limit
-                }
-            };
+                let resultCount = await model.clone().count('*', { as: 'count' }).first();
+                let rows = await model //
+                    .clone()
+                    .offset(utils.getOffset(req.body.page, req.body.limit))
+                    .limit(req.body.limit)
+                    .select('feedback.*', 'user.nickname', 'user.username', 'user.phone');
+                return {
+                    ...constantConfig.code.SUCCESS_SELECT,
+                    data: {
+                        count: resultCount.count,
+                        rows: rows,
+                        page: req.body.page,
+                        limit: req.body.limit
+                    }
+                };
+            } catch (err) {
+                fastify.logError(err);
+                return constantConfig.code.FAIL_SELECT;
+            }
         }
     });
 }

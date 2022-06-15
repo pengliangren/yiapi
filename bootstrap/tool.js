@@ -28,7 +28,7 @@ async function tool(fastify, opts) {
 
         // 提取所有角色拥有的接口
         let apiIds = [];
-        let dataRoleCodes = await fastify.redisGet('dataRole', 'json');
+        let dataRoleCodes = await fastify.redisGet('cacheData:role', 'json');
         dataRoleCodes.forEach((item) => {
             if (userRoleCodes.includes(item.code)) {
                 apiIds = item.api_ids
@@ -42,7 +42,7 @@ async function tool(fastify, opts) {
         // 将接口进行唯一性处理
         let uniqApiIds = [...new Set(apiIds)];
 
-        let dataApi = await fastify.redisGet('dataApi', 'json');
+        let dataApi = await fastify.redisGet('cacheData:api', 'json');
 
         // 最终的用户接口列表
         let result = dataApi
@@ -63,7 +63,7 @@ async function tool(fastify, opts) {
 
             // 所有菜单ID
             let menuIds = [];
-            const dataRoleCodes = await fastify.redisGet('dataRole', 'json');
+            const dataRoleCodes = await fastify.redisGet('cacheData:role', 'json');
             dataRoleCodes.forEach((item) => {
                 if (userRoleCodes.includes(item.code)) {
                     menuIds = item.menu_ids
@@ -75,15 +75,11 @@ async function tool(fastify, opts) {
             });
 
             const userMenu = [...new Set(menuIds)];
-            // console.log('=============================3');
-            // console.log(userMenu);
-            const dataMenu = await fastify.redisGet('dataMenu', 'json');
+            const dataMenu = await fastify.redisGet('cacheData:menu', 'json');
 
             let result = dataMenu.filter((item) => {
                 return userMenu.includes(item.id);
             });
-            // console.log('=============================4');
-            // console.log(result);
             return result;
         } catch (err) {
             fastify.log.error(err);
@@ -91,34 +87,33 @@ async function tool(fastify, opts) {
     });
 
     // 设置权限数据
-    fastify.decorate('cachePermissionData', async () => {
+    fastify.decorate('cacheTreeData', async () => {
         // 菜单列表
         let dataMenu = await fastify.mysql //
-            .table('permission')
-            .where({ tag: 'menu' })
-            .select('id', 'pid', 'name', 'value', 'sort');
+            .table('tree')
+            .where({ type: 'menu' })
+            .select();
 
         // 接口列表
         let dataApi = await fastify.mysql //
-            .table('permission')
-            .where({ tag: 'api' })
-            .select('id', 'pid', 'name', 'value', 'sort', 'is_open');
+            .table('tree')
+            .where({ type: 'api' })
+            .select();
 
         // 白名单接口
         let dataApiWhiteLists = dataApi.filter((item) => item.is_open === 1).map((item) => item.value);
 
         // 先置空再设置
-        fastify.redisSet('dataMenu', [], 'json');
-        fastify.redisSet('dataMenu', dataMenu, 'json');
+        fastify.redisSet('cacheData:menu', [], 'json');
+        fastify.redisSet('cacheData:menu', dataMenu, 'json');
 
         // 先置空再设置
-        fastify.redisSet('dataApi', [], 'json');
-        fastify.redisSet('dataApi', dataApi, 'json');
+        fastify.redisSet('cacheData:api', [], 'json');
+        fastify.redisSet('cacheData:api', dataApi, 'json');
 
         // 先置空再设置
-        fastify.redisSet('dataApiWhiteLists', [], 'json');
-        fastify.redisSet('dataApiWhiteLists', dataApiWhiteLists, 'json');
-        console.log('权限数据设置完毕！');
+        fastify.redisSet('cacheData:apiWhiteLists', [], 'json');
+        fastify.redisSet('cacheData:apiWhiteLists', dataApiWhiteLists, 'json');
     });
 
     // 设置角色数据
@@ -129,10 +124,25 @@ async function tool(fastify, opts) {
             .where({ state: 0 })
             .select();
 
-        await fastify.redisSet('dataRole', [], 'json');
-        await fastify.redisSet('dataRole', dataRole, 'json');
+        await fastify.redisSet('cacheData:role', [], 'json');
+        await fastify.redisSet('cacheData:role', dataRole, 'json');
         // fs.outputJsonSync('./data/roleData.json', dataRole);
-        console.log('角色数据设置完毕！');
+    });
+
+    fastify.decorate('logError', (logData) => {
+        fastify.log.error(logData);
+    });
+
+    fastify.decorate('logInfo', (logData) => {
+        fastify.log.info(logData);
+    });
+
+    fastify.decorate('logWarn', (logData) => {
+        fastify.log.warn(logData);
+    });
+
+    fastify.decorate('logDebug', (logData) => {
+        fastify.log.debug(logData);
     });
 }
 export default fp(tool, { name: 'tool', dependencies: ['sequelize', 'mysql', 'redis'] });

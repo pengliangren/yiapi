@@ -1,46 +1,50 @@
-import { resolve } from 'path';
-import { fn_dirname } from '../utils/index.js';
-export default {
-    // 应用名称
-    appname: 'yicode后台管理模板',
-    md5Key: 'yicode-template-vue2-admin-123456.',
-    // 根目录
-    rootDir: resolve(fn_dirname(import.meta.url), '..'),
-    // 监听端口
-    port: 3010,
-    // 监听主机
-    host: '127.0.0.1',
-    // 插件配置
-    plugin: [''],
-    // 默认开发管理员密码
-    devPassword: 'dev123456!@#',
-    // 接口超时 3 分钟
-    apiTimeout: 3 * 60 * 1000,
-    // 阿里云短信发送
-    aliyunSMS: {
-        accessKeyId: 'LTAI5tKpFsKADTuTJeUros7M',
-        accessKeySecret: 'bOQNrAVnHtHArHzdxeqIitzWjNsdQg'
+import path from 'path';
+import * as _ from 'lodash-es';
+import * as utils from '../utils/index.js';
+import { systemConfig } from '../system.js';
+
+let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'app.js'));
+let _appConfig = await utils.importNew(apiRelativePath, {});
+
+const appConfig = _.merge(
+    {
+        // 应用名称
+        appName: '易接口',
+        appNameEn: 'yiapi',
+        // 加密盐
+        salt: 'yiapi-123456.',
+        // 过期时间
+        expires: '3d',
+        // 接口前缀
+        apiPrefix: 'https://yiapi.chensuiyi.com',
+        // 监听端口
+        port: 3000,
+        // 监听主机
+        host: '127.0.0.1',
+        // 默认开发管理员密码
+        devPassword: 'dev123456!@#',
+        // 接口超时 3 分钟
+        apiTimeout: 3 * 60 * 1000,
+        // 不需要鉴权的接口
+        whiteLists: [
+            //
+            '/',
+            '/docs/**',
+            '/tool/**',
+            '/admin/login',
+            '/user/login',
+            '/user/register'
+        ],
+        loggerLabel: {
+            10: 'trace',
+            20: 'debug',
+            30: 'info',
+            40: 'warn',
+            50: 'error',
+            60: 'fatal'
+        }
     },
-    // 阿里云OSS对象存储
-    aliyunOSS: {
-        accessKeyId: 'LTAI5tPQii9UV44p5KkQykQZ',
-        accessKeySecret: 'BqUCr3Her5iiDychF2Cf7meRtMOB7C',
-        region: 'oss-cn-beijing',
-        bucket: 'findgoods'
-    },
-    // 腾讯云OSS对象存储
-    tencentOSS: {
-        secretId: 'AKIDUKtDH7zxqW05vVGsnSr1zh8MLBli7CKB',
-        secretKey: 'jKipXy3tUpxtYy8ByVVUDfW9NLQGXYFi',
-        region: 'ap-hongkong',
-        bucket: 'find-goods-1251319172'
-    },
-    // 不需要鉴权的接口
-    whiteLists: [
-        //
-        '/',
-        '/admin/login',
-        '/user/login',
-        '/user/register'
-    ]
-};
+    _appConfig
+);
+
+export { appConfig };

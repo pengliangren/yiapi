@@ -1,32 +1,35 @@
-import { fn_getFileInfos } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/admin.js';
 
-const fileInfos = fn_getFileInfos(import.meta.url);
+const apiInfo = utils.getApiInfo(import.meta.url);
 
 export default async function (fastify, opts) {
     fastify.route({
-        method: 'GET',
-        url: `/${fileInfos.pureFileName}`,
+        method: 'POST',
+        url: `/${apiInfo.pureFileName}`,
         schema: {
-            query: {
+            tags: [apiInfo.parentDirname],
+            summary: `查询管理员接口权限`,
+            description: `${apiInfo.apiPath}`,
+            body: {
                 type: 'object',
                 properties: {}
             }
         },
-        config: {},
         handler: async function (req, res) {
             try {
                 const result = await fastify.getUserApis(req.user);
                 return {
-                    ...constant.code.SUCCESS_SELECT,
+                    ...constantConfig.code.SUCCESS_SELECT,
                     data: {
                         rows: result
                     }
                 };
             } catch (err) {
-                fastify.log.error(err);
-                return constant.code.FAIL_SELECT;
+                fastify.logError(err);
+                return constantConfig.code.FAIL_SELECT;
             }
         }
     });

@@ -1,141 +1,180 @@
 import { DataTypes } from 'sequelize';
-export default {
+import * as utils from '../utils/index.js';
+
+const data = {
     id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true,
-        comment: '自增',
+        meta: {
+            comment: '自增'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
+        },
         schema: {
             type: 'integer',
-            minimum: 1,
-            title: '自增'
+            minimum: 1
         }
     },
     uuid: {
-        type: DataTypes.STRING(200),
-        allowNull: false,
-        comment: '唯一ID',
+        meta: {
+            comment: '唯一ID'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 200,
-            title: '唯一ID'
+            maxLength: 200
         }
     },
     role_codes: {
-        type: DataTypes.STRING(2000),
-        allowNull: false,
-        defaultValue: '',
-        comment: '用户角色码组',
+        meta: {
+            comment: '用户角色码组'
+        },
+        table: {
+            type: DataTypes.STRING(2000),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 2000,
-            title: '用户角色码组'
+            maxLength: 2000
         }
     },
     account: {
-        type: DataTypes.STRING(20),
-        allowNull: false,
-        unique: 'column',
-        defaultValue: '',
-        comment: '用户名',
+        meta: {
+            comment: '用户名'
+        },
+        table: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            unique: 'column',
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 3,
-            maxLength: 20,
-            title: '用户名'
+            maxLength: 20
         }
     },
     password: {
-        type: DataTypes.STRING(200),
-        allowNull: false,
-        comment: '密码',
+        meta: {
+            comment: '密码'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 200,
-            title: '密码'
+            maxLength: 200
         }
     },
     nickname: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        defaultValue: '',
-        comment: '昵称',
+        meta: {
+            comment: '昵称'
+        },
+        table: {
+            type: DataTypes.STRING(50),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 50,
-            title: '昵称'
+            maxLength: 50
         }
     },
     phone: {
-        type: DataTypes.STRING(20),
-        allowNull: false,
-        defaultValue: '',
-        comment: '手机号',
+        meta: {
+            comment: '手机号'
+        },
+        table: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 20,
-            title: '手机号'
+            maxLength: 20
         }
     },
     weixin: {
-        type: DataTypes.STRING(20),
-        allowNull: false,
-        defaultValue: '',
-        comment: '微信号',
+        meta: {
+            comment: '微信号'
+        },
+        table: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 20,
-            title: '微信号'
+            maxLength: 20
         }
     },
     qq: {
-        type: DataTypes.STRING(20),
-        allowNull: false,
-        defaultValue: '',
-        comment: 'QQ号',
+        meta: {
+            comment: 'QQ号'
+        },
+        table: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 20,
-            title: 'QQ号'
+            maxLength: 20
         }
     },
     email: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        defaultValue: '',
-        comment: '邮箱',
+        meta: {
+            comment: '邮箱'
+        },
+        table: {
+            type: DataTypes.STRING(50),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 50,
-            title: '邮箱'
+            maxLength: 50
         }
     },
     avatar: {
-        type: DataTypes.STRING(200),
-        allowNull: false,
-        defaultValue: '',
-        comment: '头像',
+        meta: {
+            comment: '头像'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 200,
-            title: '头像'
+            maxLength: 200
         }
     },
     state: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '状态',
+        meta: {
+            comment: '状态'
+        },
+        table: {
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0
+        },
         schema: {
             type: 'integer',
             enum: [0, 1, 2],
@@ -143,3 +182,9 @@ export default {
         }
     }
 };
+
+const option = {
+    comment: '管理员'
+};
+
+export const { tableDescribe, tableName, tableData } = utils.getTableData(import.meta.url, data, option);

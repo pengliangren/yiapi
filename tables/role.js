@@ -1,86 +1,114 @@
 import { DataTypes } from 'sequelize';
+import * as utils from '../utils/index.js';
 
-export default {
+const data = {
     id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true,
-        comment: '自增',
+        meta: {
+            comment: '自增'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
+        },
         schema: {
             type: 'integer',
-            minimum: 1,
-            title: '自增'
+            minimum: 1
         }
     },
     code: {
-        type: DataTypes.STRING(20),
-        allowNull: false,
-        unique: 'column',
-        comment: '角色编码',
+        meta: {
+            comment: '角色编码'
+        },
+        table: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            unique: 'column'
+        },
         schema: {
             type: 'string',
             minLength: 1,
-            maxLength: 20,
-            title: '角色编码'
+            maxLength: 20
         }
     },
     name: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        comment: '角色名称',
+        meta: {
+            comment: '角色名称'
+        },
+        table: {
+            type: DataTypes.STRING(100),
+            allowNull: false
+        },
         schema: {
             type: 'string',
             minLength: 1,
-            maxLength: 100,
-            title: '角色名称'
+            maxLength: 100
         }
     },
     describe: {
-        type: DataTypes.STRING(200),
-        allowNull: false,
-        defaultValue: '',
-        comment: '角色描述',
+        meta: {
+            comment: '角色描述'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 200,
-            title: '角色描述'
+            maxLength: 200
         }
     },
     menu_ids: {
-        type: DataTypes.STRING(5000),
-        allowNull: false,
-        defaultValue: '',
-        comment: '角色菜单组',
+        meta: {
+            comment: '角色菜单组'
+        },
+        table: {
+            type: DataTypes.STRING(5000),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 5000,
-            title: '角色菜单组'
+            maxLength: 5000
         }
     },
     api_ids: {
-        type: DataTypes.STRING(5000),
-        allowNull: false,
-        defaultValue: '',
-        comment: '角色接口组',
+        meta: {
+            comment: '角色接口组'
+        },
+        table: {
+            type: DataTypes.STRING(5000),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 5000,
-            title: '角色接口组'
+            maxLength: 5000
         }
     },
     state: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '状态',
+        meta: {
+            comment: '状态'
+        },
+        table: {
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0
+        },
         schema: {
             type: 'integer',
-            enum: [0, 1, 2],
-            title: '状态'
+            enum: [0, 1, 2]
         }
     }
 };
+
+const option = {
+    comment: '角色'
+};
+
+export const { tableDescribe, tableName, tableData } = utils.getTableData(import.meta.url, data, option);

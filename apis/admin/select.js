@@ -1,54 +1,59 @@
-import { fn_getFileInfos, fn_getOffset, fn_existsRole } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
-const fileInfos = fn_getFileInfos(import.meta.url);
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/admin.js';
+
+const apiInfo = utils.getApiInfo(import.meta.url);
 
 export default async function (fastify, opts) {
     fastify.route({
-        method: 'GET',
-        url: `/${fileInfos.pureFileName}`,
+        method: 'POST',
+        url: `/${apiInfo.pureFileName}`,
         schema: {
-            query: {
+            tags: [apiInfo.parentDirname],
+            summary: `查询管理员`,
+            description: `${apiInfo.apiPath}`,
+            body: {
                 type: 'object',
                 properties: {
-                    page: schema.page,
-                    limit: schema.limit
+                    page: schemaConfig.page,
+                    limit: schemaConfig.limit
                 }
             }
         },
-        config: {},
         handler: async function (req, res) {
             try {
-                let adminModel = fastify.mysql //
-                    .table('admin')
+                let model = fastify.mysql //
+                    .table(tableName)
                     .modify(function (queryBuilder) {
-                        if (fn_existsRole(req.user, 'dev') === false) {
+                        if (utils.existsRole(req.user, 'dev') === false) {
                             queryBuilder.where('account', '<>', 'dev');
                         }
-                        if (req.query.state !== undefined) {
-                            queryBuilder.where('state', req.query.state);
+                        if (req.body.state !== undefined) {
+                            queryBuilder.where('state', req.body.state);
                         }
                     });
 
-                let resultCount = await adminModel.clone().count('id', { as: 'count' }).first();
-                let resultRows = await adminModel
+                let resultCount = await model.clone().count('id', { as: 'count' }).first();
+                let rows = await model
                     //
                     .clone()
-                    .offset(fn_getOffset(req.query.page, req.query.limit))
-                    .limit(req.query.limit)
+                    .offset(utils.getOffset(req.body.page, req.body.limit))
+                    .limit(req.body.limit)
                     .select();
+
                 return {
-                    ...constant.code.SUCCESS_SELECT,
+                    ...constantConfig.code.SUCCESS_SELECT,
                     data: {
                         count: resultCount.count,
-                        rows: resultRows,
-                        page: req.query.page,
-                        limit: req.query.limit
+                        rows: rows,
+                        page: req.body.page,
+                        limit: req.body.limit
                     }
                 };
             } catch (err) {
-                fastify.log.error(err);
-                return constant.code.FAIL_SELECT;
+                fastify.logError(err);
+                return constantConfig.code.FAIL_SELECT;
             }
         }
     });

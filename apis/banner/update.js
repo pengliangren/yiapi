@@ -1,45 +1,50 @@
-import { fn_getFileInfos, fn_clearEmptyData, fn_getDatetime } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
-import bannerTable from '../../tables/banner.js';
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/banner.js';
 
-const fileInfos = fn_getFileInfos(import.meta.url);
+const apiInfo = utils.getApiInfo(import.meta.url);
 
 export default async function (fastify, opts) {
     fastify.route({
         method: 'POST',
-        url: `/${fileInfos.pureFileName}`,
+        url: `/${apiInfo.pureFileName}`,
         schema: {
+            summary: `更新轮播图`,
+            tags: [apiInfo.parentDirname],
+            description: `${apiInfo.apiPath}`,
             body: {
                 type: 'object',
                 properties: {
-                    id: schema.id,
-                    thumbnail: schema.image,
-                    recommend_state: bannerTable.recommend_state.schema
+                    id: schemaConfig.id,
+                    thumbnail: schemaConfig.image,
+                    recommend_state: tableData.recommend_state.schema
                 },
                 required: ['id']
             }
         },
-        config: {},
+
         handler: async function (req, res) {
-            let model = fastify.mysql //
-                .table('banner')
-                .where({ id: req.body.id })
-                .modify(function (queryBuilder) {});
+            try {
+                let model = fastify.mysql //
+                    .table(tableName)
+                    .where({ id: req.body.id })
+                    .modify(function (queryBuilder) {});
 
-            // 需要更新的数据
-            let updateData = fn_clearEmptyData({
-                title: req.body.title,
-                thumbnail: req.body.thumbnail,
-                recommend_state: req.body.recommend_state,
-                updated_at: fn_getDatetime()
-            });
+                // 需要更新的数据
+                let data = {
+                    title: req.body.title,
+                    thumbnail: req.body.thumbnail,
+                    recommend_state: req.body.recommend_state,
+                    updated_at: utils.getDatetime()
+                };
 
-            let result = await model.update(updateData);
-            if (!result) {
-                return constant.code.FAIL_UPDATE;
+                let result = await model.update(utils.clearEmptyData(data));
+                return constantConfig.code.SUCCESS_UPDATE;
+            } catch (err) {
+                fastify.logError(err);
+                return constantConfig.code.FAIL_UPDATE;
             }
-            return constant.code.SUCCESS_UPDATE;
         }
     });
 }

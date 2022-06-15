@@ -1,20 +1,20 @@
 // 模块
-import { basename as path_basename, resolve as path_resolve } from 'path';
-import { snakeCase as _snakeCase } from 'lodash-es';
+import path from 'path';
+import * as _ from 'lodash-es';
 import fp from 'fastify-plugin';
 import { Sequelize } from 'sequelize';
 import fg from 'fast-glob';
 
 // 内部
-import { fn_filename, fn_dirname, fn_relativePath } from '../utils/index.js';
-import { rootDir } from '../system.js';
-import database from '../config/database.js';
+import * as utils from '../utils/index.js';
+import { appConfig } from '../config/app.js';
+import { databaseConfig } from '../config/database.js';
 
 async function plugin(fastify, options) {
-    const sequelize = await new Sequelize(database.db, database.username, database.password, {
-        host: database.host,
-        dialect: database.dialect,
-        port: database.port,
+    const sequelize = await new Sequelize(databaseConfig.db, databaseConfig.username, databaseConfig.password, {
+        host: databaseConfig.host,
+        dialect: databaseConfig.dialect,
+        port: databaseConfig.port,
         define: {
             underscored: true,
             freezeTableName: true,
@@ -31,9 +31,12 @@ async function plugin(fastify, options) {
     });
 
     fg.sync('./tables/**/*', { onlyFiles: true, dot: false }).forEach(async (file) => {
-        let tableName = _snakeCase(path_basename(file, '.js'));
-        let { default: tableFields } = await import(fn_relativePath(fn_dirname(import.meta.url), path_resolve(rootDir, file)));
-        let table = await sequelize.define(tableName, tableFields);
+        let { tableDescribe, tableName, tableData, tableOption } = await import(utils.relativePath(utils.dirname(import.meta.url), path.resolve('.', file)));
+        let tableSchema = {};
+        _.forOwn(tableData, (item, key) => {
+            tableSchema[key] = item.table;
+        });
+        let table = await sequelize.define(tableName, tableSchema, tableOption);
         await table.sync({
             //
             // force: true,
@@ -45,7 +48,6 @@ async function plugin(fastify, options) {
     fastify.addHook('onClose', (instance, done) => sequelize.close().then(() => done()));
 
     await sequelize.authenticate();
-    console.log('表结构已同步完毕！');
 }
 
 export default fp(plugin, { name: 'sequelize' });

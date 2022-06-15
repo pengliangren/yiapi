@@ -1,59 +1,98 @@
 import { DataTypes } from 'sequelize';
-export default {
+import * as utils from '../utils/index.js';
+
+const data = {
     id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true,
-        comment: '自增',
+        meta: {
+            comment: '自增'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
+        },
         schema: {
             type: 'integer',
-            minimum: 1,
-            title: '自增'
+            minimum: 1
+        }
+    },
+    article_id: {
+        meta: {
+            comment: '文章ID'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        schema: {
+            type: 'integer',
+            minimum: 0
         }
     },
     title: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        comment: '标题',
+        meta: {
+            comment: '标题'
+        },
+        table: {
+            type: DataTypes.STRING(100),
+            allowNull: false,
+            defaultValue: ''
+        },
+
         schema: {
             type: 'string',
             minLength: 1,
-            maxLength: 100,
-            title: '标题'
+            maxLength: 100
         }
     },
     thumbnail: {
-        type: DataTypes.STRING(200),
-        allowNull: false,
-        comment: '轮播图',
+        meta: {
+            comment: '轮播图'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false
+        },
         schema: {
             type: 'string',
             minLength: 1,
-            maxLength: 200,
-            title: '轮播图'
+            maxLength: 200
         }
     },
     recommend_state: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '推荐状态',
+        meta: {
+            comment: '推荐状态'
+        },
+        table: {
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0
+        },
         schema: {
             type: 'integer',
-            enum: [0, 1],
-            title: '推荐状态'
+            enum: [0, 1]
         }
     },
     state: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '状态',
+        meta: {
+            comment: '状态'
+        },
+        table: {
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0
+        },
         schema: {
             type: 'integer',
-            enum: [0, 1, 2],
-            title: '状态'
+            enum: [0, 1, 2]
         }
     }
 };
+
+const option = {
+    comment: '轮播图'
+};
+
+export const { tableDescribe, tableName, tableData } = utils.getTableData(import.meta.url, data, option);

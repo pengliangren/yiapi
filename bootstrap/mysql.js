@@ -3,7 +3,7 @@ import path from 'path';
 import fp from 'fastify-plugin';
 import Knex from 'knex';
 import fg from 'fast-glob';
-import database from '../config/database.js';
+import { databaseConfig } from '../config/database.js';
 
 async function plugin(fastify, options) {
     try {
@@ -11,11 +11,11 @@ async function plugin(fastify, options) {
         const mysql = await new Knex({
             client: 'mysql2',
             connection: {
-                host: database.host,
-                port: database.port,
-                user: database.username,
-                password: database.password,
-                database: database.db
+                host: databaseConfig.host,
+                port: databaseConfig.port,
+                user: databaseConfig.username,
+                password: databaseConfig.password,
+                database: databaseConfig.db
             },
             acquireConnectionTimeout: 30000,
             asyncStackTraces: true,
@@ -23,8 +23,6 @@ async function plugin(fastify, options) {
         });
 
         fastify.decorate('mysql', mysql);
-
-        console.log('mysql已连接！');
     } catch (err) {
         fastify.log.error(err);
     }

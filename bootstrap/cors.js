@@ -1,18 +1,18 @@
 import fp from 'fastify-plugin';
 import fastifyCors from '@fastify/cors';
+import * as _ from 'lodash-es';
+import { corsConfig } from '../config/cors.js';
+
 async function plugin(fastify, opts) {
     fastify.register(fastifyCors, function (instance) {
         return (req, callback) => {
-            let corsConfig = {
+            // 默认跨域，如果需要指定请求前缀，可以被传入的参数覆盖
+            let newCorsConfig = _.merge({
                 origin: req.headers.origin || req.headers.host || '*',
-                methods: ['GET', 'OPTIONS', 'POST'],
-                allowedHeaders: ['Content-Type', 'Authorization', 'authorization'],
-                exposedHeaders: ['Content-Range', 'X-Content-Range', 'Authorization', 'authorization'],
-                preflightContinue: false,
-                optionsSuccessStatus: 204,
-                credentials: false
-            };
-            callback(null, corsConfig);
+                corsConfig
+            });
+
+            callback(null, newCorsConfig);
         };
     });
 }

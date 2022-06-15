@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
         {
-            name: 'yicode-template-vue2-admin-api',
+            name: 'yiapi',
             instances: 'max',
             script: './app.js',
             exec_mode: 'cluster',

@@ -1,48 +1,51 @@
-import { fn_getFileInfos, fn_clearEmptyData, fn_MD5, fn_getDatetime } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
-import adminTable from '../../tables/admin.js';
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/admin.js';
 
-const fileInfos = fn_getFileInfos(import.meta.url);
+const apiInfo = utils.getApiInfo(import.meta.url);
 
 export default async function (fastify, opts) {
     fastify.route({
         method: 'POST',
-        url: `/${fileInfos.pureFileName}`,
+        url: `/${apiInfo.pureFileName}`,
         schema: {
+            tags: [apiInfo.parentDirname],
+            summary: `更新管理员`,
+            description: `${apiInfo.apiPath}`,
             body: {
                 type: 'object',
                 properties: {
-                    id: adminTable.id.schema,
-                    password: adminTable.password.schema,
-                    nickname: adminTable.nickname.schema,
-                    role_codes: adminTable.role_codes.schema
+                    id: tableData.id.schema,
+                    password: tableData.password.schema,
+                    nickname: tableData.nickname.schema,
+                    role_codes: tableData.role_codes.schema
                 },
                 required: ['id']
             }
         },
-        config: {},
+
         handler: async function (req, res) {
             try {
-                let roleModel = fastify.mysql //
-                    .table('admin')
+                let model = fastify.mysql //
+                    .table(tableName)
                     .where({ id: req.body.id })
                     .modify(function (queryBuilder) {});
 
                 // 需要更新的数据
-                let updateData = fn_clearEmptyData({
-                    password: fn_MD5(req.body.password),
+                let data = {
+                    password: utils.MD5(req.body.password),
                     nickname: req.body.nickname,
                     role_codes: req.body.role_codes,
-                    updated_at: fn_getDatetime()
-                });
+                    updated_at: utils.getDatetime()
+                };
 
-                let updateResult = await roleModel.update(updateData);
+                let updateResult = await model.update(utils.clearEmptyData(data));
 
-                return constant.code.SUCCESS_UPDATE;
+                return constantConfig.code.SUCCESS_UPDATE;
             } catch (err) {
-                fastify.log.error(err);
-                return constant.code.FAIL_UPDATE;
+                fastify.logError(err);
+                return constantConfig.code.FAIL_UPDATE;
             }
         }
     });

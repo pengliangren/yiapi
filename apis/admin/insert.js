@@ -1,55 +1,61 @@
 import { nanoid } from 'nanoid';
-import { merge as _merge } from 'lodash-es';
-import { fn_getFileInfos, fn_MD5, fn_clearEmptyData, fn_getDatetime } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
-import adminTable from '../../tables/admin.js';
-const fileInfos = fn_getFileInfos(import.meta.url);
+import * as _ from 'lodash-es';
+
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/admin.js';
+
+const apiInfo = utils.getApiInfo(import.meta.url);
 
 export default async function (fastify, opts) {
     fastify.route({
         method: 'POST',
-        url: `/${fileInfos.pureFileName}`,
+        url: `/${apiInfo.pureFileName}`,
         schema: {
+            tags: [apiInfo.parentDirname],
+            summary: `添加管理员`,
+            description: `${apiInfo.apiPath}`,
             body: {
                 type: 'object',
                 properties: {
-                    account: adminTable.account.schema,
-                    password: adminTable.password.schema,
-                    nickname: adminTable.nickname.schema,
-                    role_codes: adminTable.role_codes.schema
+                    account: tableData.account.schema,
+                    password: tableData.password.schema,
+                    nickname: tableData.nickname.schema,
+                    role_codes: tableData.role_codes.schema
                 },
                 required: ['account', 'password', 'nickname']
             }
         },
-        config: {},
+
         handler: async function (req, res) {
             try {
-                let adminModel = fastify.mysql //
-                    .table('admin')
+                let model = fastify.mysql //
+                    .table(tableName)
                     .modify(function (queryBuilder) {});
-                let _result = await adminModel.clone().orWhere('account', req.body.account).orWhere('nickname', req.body.nickname).first();
+                let _result = await model.clone().orWhere('account', req.body.account).orWhere('nickname', req.body.nickname).first();
                 if (_result !== undefined) {
-                    return _merge(constant.code.FAIL, { msg: '管理员账号或昵称已存在' });
+                    return _.merge(constantConfig.code.FAIL, { msg: '管理员账号或昵称已存在' });
                 }
 
-                let insertData = fn_clearEmptyData({
+                let data = {
                     account: req.body.account,
-                    password: fn_MD5(req.body.password),
+                    password: utils.MD5(req.body.password),
                     nickname: req.body.nickname,
                     role_codes: req.body.role_codes,
                     uuid: nanoid(),
-                    created_at: fn_getDatetime(),
-                    updated_at: fn_getDatetime()
-                });
-                let result = await adminModel.clone().insert(insertData);
+                    created_at: utils.getDatetime(),
+                    updated_at: utils.getDatetime()
+                };
+
+                let result = await model.clone().insert(utils.clearEmptyData(data));
                 return {
-                    ...constant.code.SUCCESS_INSERT,
+                    ...constantConfig.code.SUCCESS_INSERT,
                     data: result
                 };
             } catch (err) {
-                fastify.log.error(err);
-                return constant.code.FAIL_INSERT;
+                fastify.logError(err);
+                return constantConfig.code.FAIL_INSERT;
             }
         }
     });

@@ -1,46 +1,49 @@
-import { find as _find, merge as _merge } from 'lodash-es';
+import * as _ from 'lodash-es';
 import fp from 'fastify-plugin';
 import fastifyJwt from '@fastify/jwt';
 import dayjs from 'dayjs';
+import micromatch from 'micromatch';
 
-import jwt from '../config/jwt.js';
-import appConfig from '../config/app.js';
-import constant from '../config/constant.js';
-import { fn_routerPath, fn_checkParams } from '../utils/index.js';
+import { jwtConfig } from '../config/jwt.js';
+import { appConfig } from '../config/app.js';
+import { constantConfig } from '../config/constant.js';
+import * as utils from '../utils/index.js';
 
 async function main(fastify, opts) {
     fastify.register(fastifyJwt, {
-        secret: jwt.secret,
+        secret: jwtConfig.secret,
         decode: {
             complete: true
         },
         sign: {
-            algorithm: jwt.algorithm,
-            expiresIn: jwt.expiresIn
+            algorithm: jwtConfig.algorithm,
+            expiresIn: jwtConfig.expiresIn
         },
         verify: {
-            algorithms: [jwt.algorithm]
+            algorithms: [jwtConfig.algorithm]
         }
     });
 
     fastify.addHook('preValidation', async (req, res) => {
         try {
             // 取得请求API路径
-            req.apiPath = fn_routerPath(req.url);
+            req.apiPath = utils.routerPath(req.url);
 
             // 参数检测
-            let checkParams = await fn_checkParams(req);
+            await utils.checkApiParams(req);
 
-            // 获取白名单接口
-            const dataApiWhiteLists = await fastify.redisGet('dataApiWhiteLists', 'json');
+            // 从缓存获取白名单接口
+            const dataApiWhiteLists = await fastify.redisGet('cacheData:apiWhiteLists', 'json');
 
             // 设置默认访问角色为游客
             let visitor = {
                 role_codes: 'visitor'
             };
 
+            let isWhitePass = micromatch.isMatch(req.apiPath, appConfig.whiteLists);
+
             // 如果接口在白名单中，则直接请求访问
-            if (appConfig.whiteLists.includes(req.apiPath) || dataApiWhiteLists.includes(req.apiPath)) {
+            if (isWhitePass) {
                 if (req.headers.authorization) {
                     const jwtData = fastify.jwt.decode(req.headers.authorization?.split(' ')?.[1] || '666666') || {};
                     req.user = jwtData.payload || visitor;
@@ -56,21 +59,20 @@ async function main(fastify, opts) {
 
                 const userApis = await fastify.getUserApis(req.user);
 
+                let hasApi = _.find(userApis, { value: req.apiPath });
+
                 // 如果当前请求的路由，不在用户许可内
-                if (!_find(userApis, { value: req.apiPath })) {
-                    if (req.user.uuid) {
-                        res.send(_merge(constant.code.FAIL, { msg: `您没有 [ ${req.apiPath} ] 接口操作权限` }));
-                        return;
+                if (!hasApi) {
+                    if (req.user.id) {
+                        res.send(_.merge(constantConfig.code.FAIL, { msg: `您没有 [ ${req.apiPath} ] 接口操作权限` }));
                     } else {
-                        res.send(constant.code.NOT_LOGIN);
-                        return;
+                        res.send(constantConfig.code.NOT_LOGIN);
                     }
                 }
             }
         } catch (err) {
-            fastify.log.error(err);
-            res.send(_merge(constant.code.FAIL, { msg: err.msg || '认证异常' }));
-            return;
+            fastify.logError(err);
+            res.send(_.merge(constantConfig.code.FAIL, { msg: err.msg || '认证异常' }));
         }
     });
 }

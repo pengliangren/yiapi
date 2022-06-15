@@ -1,8 +1,8 @@
 import fp from 'fastify-plugin';
 import path from 'path';
 import fastifySwagger from '@fastify/swagger';
-import redis from '../config/redis.js';
 import fg from 'fast-glob';
+import { appConfig } from '../../config/app.js';
 
 async function main(fastify, opts) {
     let tags = fg.sync('./apis/*', { onlyDirectories: true, onlyFiles: false, dot: false, deep: 1 }).map((file) => {
@@ -11,34 +11,25 @@ async function main(fastify, opts) {
     fastify.register(fastifySwagger, {
         openapi: {
             info: {
-                title: '前端世界API接口文档',
-                description: '前端世界的API接口文档',
+                title: `${appConfig.appName}接口文档`,
+                description: `${appConfig.appName}接口文档`,
                 version: '1.0.0'
             },
             servers: [
                 {
-                    url: 'http://localhost'
+                    url: appConfig.apiPrefix,
+                    description: '接口请求域名'
                 }
-            ],
-            components: {
-                securitySchemes: {
-                    apiKey: {
-                        type: 'apiKey',
-                        name: 'apiKey',
-                        in: 'header'
-                    }
-                }
-            },
-            // security: [Object],
-            tags: tags
+            ]
         },
         routePrefix: '/docs',
         uiConfig: {
-            docExpansion: 'list',
+            docExpansion: 'none',
             deepLinking: false
         },
         staticCSP: true,
-        exposeRoute: true
+        exposeRoute: true,
+        persistAuthorization: true
     });
 }
 export default fp(main, { name: 'swagger' });

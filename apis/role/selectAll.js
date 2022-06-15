@@ -1,39 +1,45 @@
-import { fn_getFileInfos, fn_existsRole } from '../../utils/index.js';
-import constant from '../../config/constant.js';
-import schema from '../../config/schema.js';
+import * as utils from '../../utils/index.js';
+import { constantConfig } from '../../config/constant.js';
+import { schemaConfig } from '../../config/schema.js';
+import { tableDescribe, tableName, tableData } from '../../tables/role.js';
 
-const fileInfos = fn_getFileInfos(import.meta.url);
+const apiInfo = utils.getApiInfo(import.meta.url);
+
 export default async function (fastify, opts) {
     fastify.route({
-        method: 'GET',
-        url: `/${fileInfos.pureFileName}`,
+        method: 'POST',
+        url: `/${apiInfo.pureFileName}`,
         schema: {
-            query: {
+            summary: `查询所有角色`,
+            tags: [apiInfo.parentDirname],
+            description: `${apiInfo.apiPath}`,
+            body: {
                 type: 'object',
                 properties: {}
             }
         },
-        config: {},
+
         handler: async function (req, res) {
             try {
-                let roleModel = fastify.mysql //
-                    .table('role')
+                let model = fastify.mysql //
+                    .table(tableName)
                     .modify(function (queryBuilder) {
-                        if (fn_existsRole(req.user, 'dev') === false) {
+                        if (utils.existsRole(req.user, 'dev') === false) {
                             queryBuilder.where('code', '<>', 'dev');
                         }
                     });
 
-                let resultRows = await roleModel.clone().select();
+                let rows = await model.clone().select();
+
                 return {
-                    ...constant.code.SUCCESS_SELECT,
+                    ...constantConfig.code.SUCCESS_SELECT,
                     data: {
-                        rows: resultRows
+                        rows: rows
                     }
                 };
             } catch (err) {
-                fastify.log.error(err);
-                return constant.code.FAIL_SELECT;
+                fastify.logError(err);
+                return constantConfig.code.FAIL_SELECT;
             }
         }
     });

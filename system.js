@@ -1,8 +1,12 @@
-import { join } from 'path';
-import { fn_dirname } from './utils/index.js';
+import path from 'path';
+import url from 'url';
 
-// yicode命令路径
-export const rootDir = join(fn_dirname(import.meta.url));
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// 项目根目录路径
-export const cwdDir = join(process.cwd());
+const systemConfig = {
+    appDir: process.cwd(),
+    yiapiDir: __dirname
+};
+
+export { systemConfig };

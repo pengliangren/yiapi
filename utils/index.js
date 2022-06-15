@@ -1,58 +1,72 @@
-import { resolve, basename, dirname, relative } from 'path';
-import { fileURLToPath } from 'url';
-import { forOwn as _forOwn, omit as _omit, isEmpty as _isEmpty, toUpper as _toUpper } from 'lodash-es';
+import path from 'path';
+import url from 'url';
+import * as _ from 'lodash-es';
 import md5 from 'blueimp-md5';
-import appConfig from '../config/app.js';
 import dayjs from 'dayjs';
+import { nanoid } from 'nanoid';
+
+import { appConfig } from '../config/app.js';
+import { apiConfig } from '../config/api.js';
+
+const apiByValue = _.keyBy(apiConfig, 'value');
 
 // 获取文件名（不包括扩展名）
-export function fn_getFileInfos(metaUrl) {
-    let _filename = fn_filename(metaUrl);
-    let _dirname = fn_dirname(metaUrl);
-    const pureFileName = basename(_filename, '.js');
+export function getApiInfo(metaUrl) {
+    let _filename = filename(metaUrl);
+    let _dirname = dirname(metaUrl);
+    const pureFileName = path.basename(_filename, '.js');
+    let parentDirname = path.relative(path.dirname(_dirname), _dirname);
+    let apiData = apiByValue[`/${parentDirname}`];
     return {
         pureFileName: pureFileName,
-        parentDirname: relative(dirname(_dirname), _dirname)
+        parentDirname: apiData ? apiData.name : parentDirname,
+        apiPath: `/${parentDirname}/${pureFileName}`
     };
 }
 
-export function fn_getApiPath(metaUrl) {
-    let apiPath = '/' + relative(resolve('./apis'), fileURLToPath(metaUrl)).replace('.js', '').replace(/\\+/, '/');
+// 获取请求的接口路径
+export function getApiPath(metaUrl) {
+    let apiPath = '/' + path.relative(path.resolve('./apis'), url.fileURLToPath(metaUrl)).replace('.js', '').replace(/\\+/, '/');
     return apiPath;
 }
 
 // 清理对象的空数据
-export function fn_clearEmptyData(obj, expludeFields = ['id']) {
+export function clearEmptyData(obj, expludeFields = ['id']) {
     let newObj = {};
-    _forOwn(obj, (value, key) => {
+    _.forOwn(obj, (value, key) => {
         if (value !== null && value !== undefined) {
             newObj[key] = value;
         }
     });
-    return _omit(newObj, expludeFields);
+    return _.omit(newObj, expludeFields);
+}
+
+// 随机hash值
+export function RandomHASH() {
+    return md5(nanoid(), appConfig.salt);
 }
 
 // 加密md5值
-export function fn_MD5(value) {
-    return md5(value, appConfig.md5Key);
+export function MD5(value) {
+    return md5(value, appConfig.salt);
 }
 
 // 解密MD5值
-export function fn_HMAC_MD5(value) {
-    return md5(value, appConfig.md5Key, true);
+export function HMAC_MD5(value) {
+    return md5(value, appConfig.salt, true);
 }
 
 // 获得分页的偏移值
-export function fn_getOffset(page, limit) {
+export function getOffset(page, limit) {
     return (page - 1) * limit;
 }
 
-export function fn_getDatetime() {
+export function getDatetime() {
     return dayjs().format('YYYY-MM-DD HH:mm:ss');
 }
 
-export function fn_relativePath(from, to) {
-    let _relative = relative(from, to);
+export function relativePath(from, to) {
+    let _relative = path.relative(from, to);
     let _covertPath = _relative.replace(/\\+/g, '/');
 
     // 如果第一个不是（.），则自动拼接点
@@ -62,16 +76,16 @@ export function fn_relativePath(from, to) {
     return _covertPath;
 }
 
-export function fn_filename(metaUrl) {
-    return fileURLToPath(metaUrl);
+export function filename(metaUrl) {
+    return url.fileURLToPath(metaUrl);
 }
 
-export function fn_dirname(metaUrl) {
-    const filename = fileURLToPath(metaUrl);
-    return dirname(filename);
+export function dirname(metaUrl) {
+    const filename = url.fileURLToPath(metaUrl);
+    return path.dirname(filename);
 }
 
-export function fn_existsRole(session, role) {
+export function existsRole(session, role) {
     return session.role_codes.split(',').includes(role);
 }
 
@@ -80,32 +94,22 @@ export function fn_existsRole(session, role) {
  * @param {String} url 请求路径（不带host）
  * @returns {String} 返回路径字段
  */
-export function fn_routerPath(url) {
-    let apiPath = new URL(url, 'http://127.0.0.1').pathname;
+export function routerPath(url) {
+    let urls = new URL(url, 'http://127.0.0.1');
+    let apiPath = urls.pathname;
     return apiPath;
 }
 
 /**
  * 检查传参有效性
  */
-export function fn_checkParams(req) {
+export function checkApiParams(req) {
     return new Promise((resolve, reject) => {
-        let fields = {};
+        let fields = req.body;
 
-        // 判断接口是否超时
-        if (_toUpper(req.method) === 'GET') {
-            fields = req.query;
-        }
-        if (_toUpper(req.method) === 'POST') {
-            fields = req.body;
-        }
-        // console.log('======================================');
-        // console.log(req.method);
-        // console.log('🚀 ~ file: index.js ~ line 94 ~ returnnewPromise ~ fields', fields);
+        let fieldsParams = _.omit(fields, ['sign']);
 
-        let fieldsParams = _omit(fields, ['sign']);
-
-        if (_isEmpty(fieldsParams)) {
+        if (_.isEmpty(fieldsParams)) {
             return resolve({ code: 0, msg: '接口未带参数' });
         }
 
@@ -119,7 +123,7 @@ export function fn_checkParams(req) {
         }
 
         let fieldsArray = [];
-        _forOwn(fieldsParams, (value, key) => {
+        _.forOwn(fieldsParams, (value, key) => {
             fieldsArray.push(`${key}=${value}`);
         });
 
@@ -128,9 +132,39 @@ export function fn_checkParams(req) {
         let fieldsMd5 = md5(fieldsSort);
 
         if (fieldsMd5 !== fields.sign) {
-            return reject({ code: 1, msg: '接口请求参数校验失败' });
+            return reject({ code: 1, msg: '接口请求参数校验失败', sign: fieldsMd5 });
         }
 
         return resolve({ code: 0, msg: '接口参数正常' });
     });
+}
+
+export function getTableData(url, data, option) {
+    let apiInfo = getApiInfo(url);
+    let data2 = {};
+    _.forOwn(_.cloneDeep(data), (item, key) => {
+        item.table.comment = item.meta.comment;
+        item.schema.title = item.meta.comment;
+        data2[key] = item;
+    });
+    return {
+        tableName: _.snakeCase(apiInfo.pureFileName),
+        tableDescribe: option.comment,
+        tableData: data2,
+        tableOption: option
+    };
+}
+
+/**
+ * 可控导入
+ * @param {String} path 导入路径
+ * @param {Any} default 默认值
+ */
+export async function importNew(path, dv) {
+    try {
+        const data = await import(path);
+        return data;
+    } catch (err) {
+        return dv;
+    }
 }

@@ -1,73 +1,140 @@
 import { DataTypes } from 'sequelize';
+import * as utils from '../utils/index.js';
 
-export default {
+const data = {
     id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true,
-        comment: '自增',
+        meta: {
+            comment: '自增'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
+        },
         schema: {
             type: 'integer',
-            minimum: 1,
-            title: '自增'
+            minimum: 1
+        }
+    },
+    publisher_id: {
+        meta: {
+            comment: '发布者ID'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        schema: {
+            type: 'integer',
+            minimum: 1
         }
     },
     title: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        comment: '标题',
+        meta: {
+            comment: '标题'
+        },
+        table: {
+            type: DataTypes.STRING(100),
+            allowNull: false
+        },
         schema: {
             type: 'string',
             minLength: 1,
-            maxLength: 100,
-            title: '标题'
+            maxLength: 100
         }
     },
+
     summary: {
-        type: DataTypes.STRING(200),
-        allowNull: false,
-        defaultValue: '',
-        comment: '摘要',
+        meta: {
+            comment: '摘要'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 200,
-            title: '摘要'
+            maxLength: 200
         }
     },
-    recommend_state: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '推荐状态',
+    thumbnail: {
+        meta: {
+            comment: '缩略图'
+        },
+        table: {
+            type: DataTypes.STRING(200),
+            allowNull: false
+        },
         schema: {
-            type: 'number',
-            enum: [0, 1],
-            title: '推荐状态'
+            type: 'string',
+            minLength: 1,
+            maxLength: 200
+        }
+    },
+    views: {
+        meta: {
+            comment: '浏览人数'
+        },
+        table: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        schema: {
+            type: 'integer',
+            minimum: 0
         }
     },
     content: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-        defaultValue: '',
-        comment: '正文',
+        meta: {
+            comment: '正文'
+        },
+        table: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+            defaultValue: ''
+        },
         schema: {
             type: 'string',
             minLength: 0,
-            maxLength: 50000,
-            title: '摘要'
+            maxLength: 50000
+        }
+    },
+    recommend_state: {
+        meta: {
+            comment: '推荐状态'
+        },
+        table: {
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0
+        },
+        schema: {
+            type: 'integer',
+            enum: [0, 1]
         }
     },
     state: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '状态',
+        meta: {
+            comment: '状态'
+        },
+        table: {
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0
+        },
         schema: {
             type: 'integer',
-            enum: [0, 1, 2],
-            title: '状态'
+            enum: [0, 1, 2]
         }
     }
 };
+
+const option = {
+    comment: '公告'
+};
+
+export const { tableDescribe, tableName, tableData } = utils.getTableData(import.meta.url, data, option);

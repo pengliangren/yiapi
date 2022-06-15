@@ -1,8 +1,21 @@
-export default {
-    db: 'yicode_template_vue2_admin_api',
-    username: 'yicode-template-vue2-admin-api',
-    password: 'yicode-template-vue2-admin-api!@#666666',
-    host: 'hk-cdb-aumg9rnx.sql.tencentcdb.com',
-    dialect: 'mysql',
-    port: 63558
-};
+import path from 'path';
+import * as _ from 'lodash-es';
+import * as utils from '../utils/index.js';
+import { systemConfig } from '../system.js';
+
+let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'database.js'));
+let _databaseConfig = await utils.importNew(apiRelativePath, {});
+
+const databaseConfig = _.merge(
+    {
+        db: '',
+        username: '',
+        password: '',
+        host: '',
+        dialect: 'mysql',
+        port: 3306
+    },
+    databaseConfig
+);
+
+export { databaseConfig };
