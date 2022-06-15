@@ -4,7 +4,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'database.js'));
-let _databaseConfig = await utils.importNew(apiRelativePath, {});
+let importConfig = await utils.importNew(apiRelativePath, {});
 
 const databaseConfig = _.merge(
     {
@@ -15,7 +15,7 @@ const databaseConfig = _.merge(
         dialect: 'mysql',
         port: 3306
     },
-    databaseConfig
+    importConfig.databaseConfig
 );
 
 export { databaseConfig };

@@ -4,7 +4,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'role.js'));
-let _roleConfig = await utils.importNew(apiRelativePath, []);
+let importConfig = await utils.importNew(apiRelativePath, []);
 
 // 角色初始化配置
 const roleConfig = _.concat(
@@ -30,7 +30,7 @@ const roleConfig = _.concat(
             describe: '超级管理权限、除开发相关权限之外的权限等'
         }
     ],
-    _roleConfig
+    importConfig.roleConfig
 );
 
 export { roleConfig };

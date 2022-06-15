@@ -4,7 +4,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'constant.js'));
-let _constantConfig = await utils.importNew(apiRelativePath, {});
+let importConfig = await utils.importNew(apiRelativePath, {});
 
 const constantConfig = _.merge(
     {
@@ -25,7 +25,7 @@ const constantConfig = _.merge(
             NOT_LOGIN: { symbol: 'NOT_LOGIN', code: 14, msg: '请登录后操作' }
         }
     },
-    _constantConfig
+    importConfig.constantConfig
 );
 
 export { constantConfig };

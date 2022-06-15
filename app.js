@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import Fastify from 'fastify';
 import autoLoad from '@fastify/autoload';
+import fp from 'fastify-plugin';
 import localize from 'ajv-i18n';
 import { nanoid } from 'nanoid';
 import dayjs from 'dayjs';
@@ -135,6 +136,7 @@ export {
     //
     yiApi,
     utils,
+    fp,
     sequelize,
     constantConfig,
     schemaConfig,

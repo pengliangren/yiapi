@@ -5,7 +5,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'api.js'));
-let _apiConfig = await utils.importNew(apiRelativePath, []);
+let importConfig = await utils.importNew(apiRelativePath, []);
 
 const apiConfig = _.concat(
     [
@@ -38,7 +38,7 @@ const apiConfig = _.concat(
             value: '/dictionary'
         }
     ],
-    _apiConfig
+    importConfig.apiConfig
 );
 
 export { apiConfig };

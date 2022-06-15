@@ -4,7 +4,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'cors.js'));
-let _corsConfig = await utils.importNew(apiRelativePath, {});
+let importConfig = await utils.importNew(apiRelativePath, {});
 
 const corsConfig = _.merge(
     {
@@ -17,7 +17,7 @@ const corsConfig = _.merge(
         optionsSuccessStatus: 204,
         credentials: false
     },
-    _corsConfig
+    importConfig.corsConfig
 );
 
 export { corsConfig };

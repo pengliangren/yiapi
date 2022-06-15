@@ -4,7 +4,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'app.js'));
-let _appConfig = await utils.importNew(apiRelativePath, {});
+let importConfig = await utils.importNew(apiRelativePath, {});
 
 const appConfig = _.merge(
     {
@@ -44,7 +44,7 @@ const appConfig = _.merge(
             60: 'fatal'
         }
     },
-    _appConfig
+    importConfig.appConfig
 );
 
 export { appConfig };

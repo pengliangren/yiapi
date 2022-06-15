@@ -4,7 +4,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'redis.js'));
-let _redisConfig = await utils.importNew(apiRelativePath, {});
+let importConfig = await utils.importNew(apiRelativePath, {});
 
 const redisConfig = _.merge(
     {
@@ -14,7 +14,7 @@ const redisConfig = _.merge(
         password: '',
         keyPrefix: 'yiapi#'
     },
-    _redisConfig
+    importConfig.redisConfig
 );
 
 export { redisConfig };

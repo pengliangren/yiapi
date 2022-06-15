@@ -5,7 +5,7 @@ import * as utils from '../utils/index.js';
 import { systemConfig } from '../system.js';
 
 let apiRelativePath = utils.relativePath(utils.dirname(import.meta.url), path.resolve(systemConfig.appDir, 'config', 'menu.js'));
-let _menuConfig = await utils.importNew(apiRelativePath, []);
+let importConfig = await utils.importNew(apiRelativePath, []);
 
 const menuConfig = _.concat(
     [
@@ -91,7 +91,7 @@ const menuConfig = _.concat(
             ]
         }
     ],
-    _menuConfig
+    importConfig.menuConfig
 );
 
 export { menuConfig };
